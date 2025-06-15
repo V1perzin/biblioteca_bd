@@ -1,0 +1,76 @@
+-- Esse TRIGGER é executado automaticamente após uma devolução ser registrada na tabela Devolucao.
+-- Atualmente, não faz nenhuma ação real. 
+-- Está só com um comentário que sugere que poderia, por exemplo, atualizar o status de disponibilidade do exemplar devolvido.
+
+DELIMITER //
+
+CREATE TRIGGER AtualizarEstadoAoDevolver
+AFTER INSERT ON Devolucao
+FOR EACH ROW
+BEGIN
+    -- Nada a atualizar na tabela Exemplar, mas você pode estender aqui
+    -- para registrar status, histórico, ou logs.
+    -- Exemplo: setar um campo "disponível" = TRUE em tabela alterada.
+END;
+
+DELIMITER //
+
+-- Versão com problema Problema:
+-- A verificação data_devolucao IS NULL não funciona aqui porque:
+
+-- A data da devolução não está na tabela Emprestimo.
+
+-- Ela está na tabela Devolucao, que possui relação 1:1 com Emprestimo.
+
+DELIMITER //
+
+CREATE TRIGGER verificar_exemplar_emprestado
+BEFORE INSERT ON Emprestimo -- O trigger é acionado antes de inserir um novo empréstimo
+FOR EACH ROW
+BEGIN
+    DECLARE exemplar_status INT; -- Criação da variável para armazenar o número de empréstimos ativos
+
+    -- Conta quantos empréstimos existem para o exemplar que ainda não foi devolvido
+    SELECT COUNT(*) INTO exemplar_status 
+    FROM Emprestimo 
+    WHERE id_exemplar = NEW.id_exemplar AND data_devolucao IS NULL;
+
+    -- Se o exemplar já estiver emprestado (exemplar_status > 0), impede a inserção
+    IF exemplar_status > 0 THEN
+        SIGNAL SQLSTATE '45000' -- Gera erro
+        SET MESSAGE_TEXT = 'Este exemplar já está emprestado'; -- Mensagem de erro que será exibida
+    END IF;
+END;
+
+//
+
+DELIMITER ;
+
+-- Versão para teste com corrreção do problema
+-- A verificação agora é feita corretamente, contando os empréstimos ativos na tabela Emprestimo
+
+DELIMITER //
+
+CREATE TRIGGER verificar_exemplar_emprestado
+BEFORE INSERT ON Emprestimo
+FOR EACH ROW
+BEGIN
+    DECLARE exemplar_status INT;
+
+    SELECT COUNT(*) INTO exemplar_status
+    FROM Emprestimo e
+    LEFT JOIN Devolucao d ON e.id_emprestimo = d.id_emprestimo
+    WHERE e.id_exemplar = NEW.id_exemplar AND d.id_devolucao IS NULL;
+
+    IF exemplar_status > 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Este exemplar já está emprestado';
+    END IF;
+END;
+//
+
+DELIMITER ;
+
+-- Nessa ultima versão Antes de inserir um novo empréstimo, ela verifica se já existe um empréstimo ativo (ou seja, ainda não devolvido) para o mesmo exemplar.
+
+-- Se sim, impede a inserção e exibe o erro "Este exemplar já está emprestado"

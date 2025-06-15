@@ -1,0 +1,7 @@
+select id_livro, titulo FROM livro;
+
+select id_usuario, nome FROM usuario;
+
+select id_emprestimo, id_exemplar FROM Emprestimo;
+
+select id_devolucao, data_devolucao FROM Devolucao;
