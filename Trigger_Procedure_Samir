@@ -1,0 +1,41 @@
+DELIMITER //
+
+CREATE TRIGGER verificar_exemplar_emprestado
+BEFORE INSERT ON Emprestimo -- O trigger é acionado antes de inserir um novo empréstimo
+FOR EACH ROW
+BEGIN
+    DECLARE exemplar_status INT; -- Criação da variável para armazenar o número de empréstimos ativos
+
+    -- Conta quantos empréstimos existem para o exemplar que ainda não foi devolvido
+    SELECT COUNT(*) INTO exemplar_status 
+    FROM Emprestimo 
+    WHERE id_exemplar = NEW.id_exemplar AND data_devolucao IS NULL;
+
+    -- Se o exemplar já estiver emprestado (exemplar_status > 0), impede a inserção
+    IF exemplar_status > 0 THEN
+        SIGNAL SQLSTATE '45000' -- Gera erro
+        SET MESSAGE_TEXT = 'Este exemplar já está emprestado'; -- Mensagem de erro que será exibida
+    END IF;
+END;
+
+//
+
+DELIMITER ;
+
+DELIMITER //
+
+CREATE PROCEDURE calcular_multa()
+BEGIN
+    INSERT INTO Multa (id_usuario, id_devolucao, valor, paga)
+    SELECT emp.id_usuario, dev.id_devolucao, 
+           GREATEST(DATEDIFF(dev.data_devolucao, emp.data_prevista), 0) * ex.vl_multa_diaria, 
+           FALSE
+    FROM Devolucao dev
+    JOIN Emprestimo emp ON dev.id_emprestimo = emp.id_emprestimo
+    JOIN Exemplar ex ON emp.id_exemplar = ex.id_exemplar
+    WHERE dev.data_devolucao > emp.data_prevista;
+END;
+
+//
+
+DELIMITER ;
