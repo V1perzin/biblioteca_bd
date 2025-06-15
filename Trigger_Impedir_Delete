@@ -1,0 +1,23 @@
+-- Impedir a exclusão de um usuário com empréstimos pendentes.
+
+DELIMITER //
+
+CREATE TRIGGER trg_bloquear_delete_usuario
+BEFORE DELETE ON Usuario
+FOR EACH ROW
+BEGIN
+    DECLARE emprestimos_ativos INT;
+    
+    SELECT COUNT(*) INTO emprestimos_ativos
+    FROM Emprestimo
+    WHERE id_usuario = OLD.id_usuario
+      AND data_devolucao IS NULL;
+      
+    IF emprestimos_ativos > 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Não é possível excluir o usuário com empréstimos pendentes.';
+    END IF;
+END;
+//
+
+DELIMITER ;
