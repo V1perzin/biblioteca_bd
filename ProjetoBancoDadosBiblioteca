@@ -15,7 +15,7 @@ CREATE TABLE Livro (
     autor VARCHAR(100) NOT NULL,
     editora VARCHAR(100),
     isbn VARCHAR(20) UNIQUE,
-    ano INT CHECK (ano >= 1000 AND ano <= YEAR(CURDATE())),
+    ano INT CHECK (ano >= 1000),
     categoria VARCHAR(50)
 );
 

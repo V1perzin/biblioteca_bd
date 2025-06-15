@@ -1,0 +1,43 @@
+INSERT INTO Usuario (nome, matricula, curso, email) VALUES
+('Luiz', '202501', 'Sistemas da Informação', 'luiz@gmail.com'),
+('Miguel', '202502', 'Sistemas da Informação', 'miguel@gmail.com'),
+('Herton', '202503', 'Sistemas da Informação', 'herton@gmail.com'),
+('Samir', '202504', 'Sistemas da Informação', 'samir@gmail.com');
+
+INSERT INTO Livro (titulo, autor, editora, isbn, ano, categoria) VALUES
+('Dragon Ball Z', ' Akira Toriyama', 'Jump Comics', '9788577845634', 1996, 'Aventura'),
+('My Hero Academia', 'Kōhei Horikoshi', 'Jump Comics', '9788564005237', 2024, 'Ação'),
+('Attack on Titan', 'Hajime Isayama', 'Shōnen Magazine Comics', '97885425632933', 2021, 'Ação'),
+('Chainsaw Man', 'Tatsuki Fujimoto', 'Jump Comics', '9788543045933', 2018, 'Ação'),
+('Jujutsu Kaisen', 'Gege Akutami', 'Jump Comics', '9788543035933', 2024, 'Aventura'),
+('Demon Slayer', 'Koyoharu Gotouge', 'Jump Comics', '9788543029933', 2020, 'Aventura'),
+('Your Name', 'Makoto Shinkai', 'Editora JBC', '9788543072933', 2016, 'Romance'),
+('One Piece', 'Eiichiro Oda', 'Jump Comics', '9788543021933', 1999, 'Aventura');
+
+INSERT INTO Exemplar (id_livro, codigo_interno, estado, vl_multa_diaria) VALUES
+(9, 'DBZ', 'bom', 1.50),
+(10, 'MHA', 'novo', 1.50),
+(11, 'SNK', 'bom', 1.00),
+(12, 'CHMA', 'bom', 1.00),
+(13, 'JJK', 'novo', 1.50),
+(14, 'KNYDM', 'novo', 1.50),
+(15, 'YNL', 'regular', 1.75),
+(16, 'OP', 'regular', 1.75);
+
+INSERT INTO Emprestimo (id_usuario, id_exemplar, data_emprestimo, data_prevista, data_renovacao) VALUES
+(1, 9, '2025-06-01', '2025-06-10', NULL),
+(2, 16, '2025-06-05', '2025-06-12', NULL),
+(3, 11, '2025-06-05', '2025-06-12', NULL),
+(4, 14, '2025-06-05', '2025-06-12', NULL);
+
+INSERT INTO Devolucao (id_emprestimo, data_devolucao) VALUES
+(1, '2025-06-10'),
+(2, '2025-06-12'),
+(3, '2025-06-12'),
+(4, '2025-06-12');
+
+INSERT INTO Multa (id_usuario, id_devolucao, valor, paga) VALUES
+(1, 1, 0.00, TRUE),  -- devolvido no prazo
+(2, 2, 0.00, TRUE),   -- devolvido no prazo
+(3, 2, 0.00, TRUE),   -- devolvido no prazo
+(4, 2, 0.00, TRUE);   -- devolvido no prazo
