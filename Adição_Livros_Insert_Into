@@ -15,14 +15,14 @@ INSERT INTO Livro (titulo, autor, editora, isbn, ano, categoria) VALUES
 ('One Piece', 'Eiichiro Oda', 'Jump Comics', '9788543021933', 1999, 'Aventura');
 
 INSERT INTO Exemplar (id_livro, codigo_interno, estado, vl_multa_diaria) VALUES
-(9, 'DBZ', 'bom', 1.50),
-(10, 'MHA', 'novo', 1.50),
-(11, 'SNK', 'bom', 1.00),
-(12, 'CHMA', 'bom', 1.00),
-(13, 'JJK', 'novo', 1.50),
-(14, 'KNYDM', 'novo', 1.50),
-(15, 'YNL', 'regular', 1.75),
-(16, 'OP', 'regular', 1.75);
+(1, 'DBZ', 'bom', 1.50),
+(2, 'MHA', 'novo', 1.50),
+(3, 'SNK', 'bom', 1.00),
+(4, 'CHMA', 'bom', 1.00),
+(5, 'JJK', 'novo', 1.50),
+(6, 'KNYDM', 'novo', 1.50),
+(7, 'YNL', 'regular', 1.75),
+(8, 'OP', 'regular', 1.75);
 
 INSERT INTO Emprestimo (id_usuario, id_exemplar, data_emprestimo, data_prevista, data_renovacao) VALUES
 (1, 9, '2025-06-01', '2025-06-10', NULL),
