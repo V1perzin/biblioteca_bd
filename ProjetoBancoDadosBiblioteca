@@ -1,0 +1,57 @@
+CREATE SCHEMA biblioteca_bd;
+
+CREATE TABLE Usuario (
+    id_usuario INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    matricula VARCHAR(20) UNIQUE NOT NULL,
+    curso VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    CONSTRAINT chk_email CHECK (email LIKE '%@%')
+);
+
+CREATE TABLE Livro (
+    id_livro INT PRIMARY KEY AUTO_INCREMENT,
+    titulo VARCHAR(200) NOT NULL,
+    autor VARCHAR(100) NOT NULL,
+    editora VARCHAR(100),
+    isbn VARCHAR(20) UNIQUE,
+    ano INT CHECK (ano >= 1000 AND ano <= YEAR(CURDATE())),
+    categoria VARCHAR(50)
+);
+
+CREATE TABLE Exemplar (
+    id_exemplar INT PRIMARY KEY AUTO_INCREMENT,
+    id_livro INT NOT NULL,
+    codigo_interno VARCHAR(50) UNIQUE NOT NULL,
+    estado ENUM('novo', 'bom', 'regular', 'ruim') NOT NULL,
+    vl_multa_diaria DECIMAL(6,2),
+    FOREIGN KEY (id_livro) REFERENCES Livro(id_livro)
+);
+
+CREATE TABLE Emprestimo (
+    id_emprestimo INT PRIMARY KEY AUTO_INCREMENT,
+    id_usuario INT NOT NULL,
+    id_exemplar INT NOT NULL,
+    data_emprestimo DATE NOT NULL,
+    data_prevista DATE NOT NULL,
+    data_renovacao DATE,
+    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario),
+    FOREIGN KEY (id_exemplar) REFERENCES Exemplar(id_exemplar)
+);
+
+CREATE TABLE Devolucao (
+    id_devolucao INT PRIMARY KEY AUTO_INCREMENT,
+    id_emprestimo INT UNIQUE NOT NULL,
+    data_devolucao DATE NOT NULL,
+    FOREIGN KEY (id_emprestimo) REFERENCES Emprestimo(id_emprestimo)
+);
+
+CREATE TABLE Multa (
+    id_multa INT PRIMARY KEY AUTO_INCREMENT,
+    id_usuario INT NOT NULL,
+    id_devolucao INT NOT NULL,
+    valor DECIMAL(6,2) CHECK (valor >= 0),
+    paga BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario),
+    FOREIGN KEY (id_devolucao) REFERENCES Devolucao(id_devolucao)
+);
