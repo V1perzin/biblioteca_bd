@@ -1,0 +1,111 @@
+--Procedures
+
+-- Registra o novo empréstimo com os dados fornecidos.
+DELIMITER //
+
+CREATE PROCEDURE RegistrarEmprestimo (
+    IN p_id_usuario INT,
+    IN p_id_exemplar INT,
+    IN p_data_emprestimo DATE,
+    IN p_data_prevista DATE
+)
+BEGIN
+    -- Verifica se o exemplar já está emprestado e ainda não devolvido
+    IF EXISTS ( 
+        SELECT 1
+        FROM Emprestimo e
+        LEFT JOIN Devolucao d ON e.id_emprestimo = d.id_emprestimo
+        WHERE e.id_exemplar = p_id_exemplar AND d.id_devolucao IS NULL
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Exemplar já emprestado.';
+    ELSE
+        -- Insere o empréstimo
+        INSERT INTO Emprestimo (id_usuario, id_exemplar, data_emprestimo, data_prevista)
+        VALUES (p_id_usuario, p_id_exemplar, p_data_emprestimo, p_data_prevista);
+    END IF;
+END //
+
+DELIMITER ;
+
+-- CALL RegistrarEmprestimo(1, 1, '2025-06-01', '2025-06-10');
+
+**********************
+
+-- Registra a devolução e calcula automaticamente a multa
+
+-- Busca o usuário, a data prevista de devolução, a data do empréstimo, e o exemplar referente àquele empréstimo.
+
+DELIMITER //
+
+CREATE PROCEDURE RegistrarDevolucao (
+    IN p_id_emprestimo INT,
+    IN p_data_devolucao DATE
+)
+BEGIN
+    DECLARE v_id_usuario INT;
+    DECLARE v_data_prevista DATE;
+    DECLARE v_data_emprestimo DATE;
+    DECLARE v_id_exemplar INT;
+    DECLARE v_multa_diaria DECIMAL(6,2);
+    DECLARE v_valor_multa DECIMAL(6,2);
+    
+    -- Pega dados necessários
+    SELECT e.id_usuario, e.data_prevista, e.data_emprestimo, e.id_exemplar
+    INTO v_id_usuario, v_data_prevista, v_data_emprestimo, v_id_exemplar
+    FROM Emprestimo e
+    WHERE e.id_emprestimo = p_id_emprestimo; -- Recupera dados do empréstimo
+    -- Busca o usuário, a data prevista de devolução, a data do empréstimo, e o exemplar referente àquele empréstimo.
+
+    SELECT vl_multa_diaria INTO v_multa_diaria
+    FROM Exemplar -- Recupera o valor da multa diária
+    WHERE id_exemplar = v_id_exemplar;
+
+    -- Calcula multa
+    SET v_valor_multa = GREATEST(DATEDIFF(p_data_devolucao, v_data_prevista), 0) * v_multa_diaria;
+    -- DATEDIFF(...) calcula quantos dias de atraso houve.
+    -- GREATEST(..., 0) garante que não ocorra multa negativa.
+    -- Multiplica pelos valores diários da multa.
+    
+    -- Registra devolução
+    INSERT INTO Devolucao (id_emprestimo, data_devolucao)
+    VALUES (p_id_emprestimo, p_data_devolucao);
+
+    -- Se houver multa, registra
+    IF v_valor_multa > 0 THEN
+        INSERT INTO Multa (id_usuario, id_devolucao, valor, paga)
+        VALUES (v_id_usuario, LAST_INSERT_ID(), v_valor_multa, FALSE);
+    END IF;
+END //
+
+DELIMITER ;
+
+-- CALL RegistrarDevolucao(1, '2025-06-10');
+
+**********************************
+
+-- Gerar um relatório de todos os empréstimos em aberto, 
+-- com nome do usuário, título do livro e data de empréstimo
+
+
+DELIMITER //
+
+CREATE PROCEDURE sp_relatorio_emprestimos_abertos()
+BEGIN
+    SELECT 
+        u.nome AS nome_usuario,
+        l.titulo AS titulo_livro,
+        e.data_emprestimo
+    FROM Emprestimo e
+    JOIN Usuario u ON e.id_usuario = u.id_usuario
+    JOIN Exemplar ex ON e.id_exemplar = ex.id_exemplar
+    JOIN Livro l ON ex.id_livro = l.id_livro
+    WHERE NOT EXISTS (
+        SELECT 1 FROM Devolucao d WHERE d.id_emprestimo = e.id_emprestimo
+    )
+    ORDER BY e.data_emprestimo;
+END //
+
+DELIMITER ;
+
+-- CALL sp_relatorio_emprestimos_abertos();
