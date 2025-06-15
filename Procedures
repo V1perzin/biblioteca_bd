@@ -96,3 +96,26 @@ BEGIN
 END //
 
 DELIMITER ;
+
+-- Gerar um relatório de todos os empréstimos em aberto, 
+-- com nome do usuário, título do livro e data de empréstimo
+
+
+DELIMITER //
+
+CREATE PROCEDURE sp_relatorio_emprestimos_abertos()
+BEGIN
+    SELECT 
+        u.nome AS nome_usuario,
+        l.titulo AS titulo_livro,
+        e.data_emprestimo
+    FROM Emprestimo e
+    JOIN Usuario u ON e.id_usuario = u.id_usuario
+    JOIN Exemplar ex ON e.id_exemplar = ex.id_exemplar
+    JOIN Livro l ON ex.id_livro = l.id_livro
+    WHERE e.data_devolucao IS NULL
+    ORDER BY e.data_emprestimo;
+END;
+//
+
+DELIMITER ;
